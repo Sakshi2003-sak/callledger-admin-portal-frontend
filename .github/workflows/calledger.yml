@@ -1,46 +1,21 @@
-name: Test
+name: Test SSH Connection
+
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Restore FTP Deploy Cache
-        uses: actions/cache@v4
-        with:
-          path: .ftp-deploy-sync-state.json
-          key: ${{ runner.os }}-ftp-${{ github.ref }}
-          restore-keys: |
-            ${{ runner.os }}-ftp-
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.AWS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.AWS_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H 34.229.139.144 >> ~/.ssh/known_hosts
       - name: Test SSH Connection
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ubuntu@${{ secrets.AWS_HOST }} "echo ✅ SSH connection successful!"
-      - name: Deploy to EC2
-        run: |
-          echo "🚀 Deploying Laravel app to EC2..."
-          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" \
-          --exclude ".git" --exclude "node_modules" --exclude ".github" \
-          ./ ubuntu@${{ secrets.AWS_HOST }}:/var/www/myapp
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ubuntu@${{ secrets.AWS_HOST }} "
-          sudo chown -R ubuntu:www-data /var/www/myapp &&
-          sudo chmod -R 775 /var/www/myapp &&
-          git config --global --add safe.directory /var/www/myapp &&
-          cd /var/www/myapp &&
-          composer install --no-dev --optimize-autoloader
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ubuntu@34.229.139.144 "echo ✅ SSH is working!"
