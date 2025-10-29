@@ -19,3 +19,26 @@ jobs:
       - name: Test SSH Connection
         run: |
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ubuntu@34.229.139.144 "echo ✅ SSH is working!"
+      - name: Sync updated files to /var/www/myapp
+        run: |
+          sudo mkdir -p /var/www/myapp
+          # rsync only changed files
+          sudo rsync -avz --update --checksum \
+            --exclude=".git" \
+            --exclude="node_modules" \
+            --exclude="vendor" \
+            ./ /var/www/myapp/
+      - name: Install composer dependencies (if needed)
+        run: |
+          cd /var/www/myapp
+          if [ -f composer.lock ]; then
+            sudo composer install --no-dev --optimize-autoloader
+          fi
+      - name: Refresh Laravel cache
+        run: |
+          cd /var/www/myapp
+          php artisan config:clear || true
+          php artisan cache:clear || true
+          php artisan route:clear || true
+          php artisan view:clear || true
+          php artisan optimize || true
