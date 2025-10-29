@@ -44,4 +44,3 @@ jobs:
           git config --global --add safe.directory /var/www/myapp &&
           cd /var/www/myapp &&
           composer install --no-dev --optimize-autoloader
-          "
